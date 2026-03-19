@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true },
     email: { type: String, required: true, lowerCase: true, unique: true },
     role: { type: String, required: true, enum: ["user", "admin"], default: "user" },
-    password: { type: String, required: true, minLength: 8 },
+    password: { type: String, required: true, minLength: 8, select: false },
     lastlogin: { type: Date, default: Date.now() },
     isVerified: { type: Boolean, default: false },
     accountLevel: { type: String, enum: ["bronze", "silver", "gold"], default: "bronze" },
