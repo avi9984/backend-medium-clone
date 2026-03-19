@@ -7,6 +7,7 @@ import cors from 'cors';
 import userRouter from './routes/user.js';
 import categoryRouter from './routes/category.js';
 import postRouter from './routes/post.js';
+import commentRouter from './routes/comment.js';
 
 dotenv.config({ path: [".env.local", ".env"] });
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,7 @@ mongoose.connect(process.env.MONGO_URL).then(() => console.log('MongoDB is conne
 app.use('/api/v1/users/', userRouter);
 app.use('/api/v1/categories/', categoryRouter);
 app.use('/api/v1/posts/', postRouter);
+app.use('/api/v1/comments/', commentRouter);
 
 
 app.get('/', (req, res) => {
