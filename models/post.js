@@ -18,4 +18,4 @@ const postSchema = new mongoose.Schema({
 }, { timestamps: true, versionKey: false });
 
 const Post = mongoose.model("Post", postSchema);
-module.exports = Post;
+export default Post;

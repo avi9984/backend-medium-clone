@@ -6,7 +6,7 @@ const categorySchema = new mongoose.Schema({
     name: { type: String, required: true },
     author: { type: ObjectId, ref: 'User', required: true },
     shares: { type: Number, defalut: 0 },
-    post: { type: ObjectId, ref: 'Post' }
+    post: [{ type: ObjectId, ref: 'Post' }]
 }, { timestamps: true, versionKey: false })
 
 
