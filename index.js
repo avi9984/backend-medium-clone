@@ -12,8 +12,6 @@ import commentRouter from './routes/comment.js';
 dotenv.config({ path: [".env.local", ".env"] });
 const PORT = process.env.PORT || 3000;
 
-// console.log(process);
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))

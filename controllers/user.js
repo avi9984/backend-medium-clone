@@ -1,6 +1,9 @@
 import User from '../models/user.js';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/generateToken.js';
+import { sendEmail } from '../utils/sendEmail.js';
+import crypto from 'crypto';
+
 
 //? Register User function
 
@@ -230,11 +233,121 @@ const followUser = async (req, res) => {
         return res.status(200).json({
             status: true,
             message: "You have followed user successfully",
-            userToFollow
         })
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 }
 
-export { register, loginUser, getUserProfile, blockUser, unblockUser, viewOtherUserProfile, followUser }
+
+//? Unfollow user function
+
+const unfollowUser = async (req, res) => {
+    try {
+        const userToUnfollowId = req.params.id;
+        const userToUnfollow = await User.findById(userToUnfollowId).select("-password");
+        if (!userToUnfollow) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const currentUserId = req.userAuth._id;
+
+        if (!userToUnfollow.followers.includes(currentUserId)) {
+            return res.status(403).json({ message: "You are not following this user" });
+        }
+
+
+        if (userToUnfollow.blockedUsers.includes(currentUserId)) {
+            return res.status(403).json({ message: "You are blocked by this user" });
+        }
+        // current user not unfollow himself
+        if (userToUnfollowId.toString() === currentUserId.toString()) {
+            return res.status(403).json({ message: "You cannot unfollow yourself" });
+        }
+
+        await User.findByIdAndUpdate(
+            userToUnfollowId,
+            {
+                $pull: {
+                    followers: currentUserId
+                },
+            },
+            { returnDocument: "after" },
+            { new: true }
+        )
+
+        await User.findByIdAndUpdate(
+            currentUserId,
+            {
+                $pull: {
+                    following: userToUnfollowId
+                }
+            },
+            { returnDocument: "after" },
+            { new: true }
+        )
+
+        return res.status(200).json({
+            status: true,
+            message: "You have unfollowed user successfully",
+        })
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+//? Forgot password function
+
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "This email not registered" });
+        }
+        const resetToken = user.resetPasswordToken();
+        console.log("resetToken", resetToken);
+
+        await user.save();
+        // send mail to user
+        sendEmail(email, resetToken, user.username)
+
+        return res.status(200).json({
+            status: true,
+            message: "Reset token sent successfully",
+        })
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+
+//? Reset password function
+
+const resetPassword = async (req, res) => {
+    try {
+        const resetToken = req.params.token;
+        const { password } = req.body;
+
+        //convert token into hash token
+        const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+        const user = await User.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } });
+        if (!user) {
+            return res.status(404).json({ message: "Invalid token" });
+        }
+        // hash password
+
+        user.password = await bcrypt.hash(password, 10);
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+        return res.status(200).json({
+            status: true,
+            message: "Password reset successfully",
+        })
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+export { register, loginUser, getUserProfile, blockUser, unblockUser, viewOtherUserProfile, followUser, unfollowUser, forgotPassword, resetPassword }

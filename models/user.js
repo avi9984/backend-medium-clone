@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
@@ -31,6 +32,14 @@ const userSchema = new mongoose.Schema({
     accountVerificationExpires: { type: Date }
 }, { timestamps: true, versionKey: false });
 
+
+userSchema.methods.resetPasswordToken = function () {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    this.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    this.passwordResetExpires = Date.now() + 60 * 60 * 1000;
+    return resetToken;
+}
 
 const User = mongoose.model("User", userSchema);
 export default User;
