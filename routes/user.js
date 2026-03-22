@@ -2,7 +2,12 @@ import express from 'express';
 
 const router = express.Router();
 
-import { register, loginUser, getUserProfile, blockUser, unblockUser, viewOtherUserProfile, followUser, unfollowUser, forgotPassword, resetPassword } from '../controllers/user.js';
+import {
+    register, loginUser, getUserProfile, blockUser,
+    unblockUser, viewOtherUserProfile, followUser,
+    unfollowUser, forgotPassword, resetPassword,
+    userAccountVerification, verifyAccount
+} from '../controllers/user.js';
 import { isLoggedIn } from '../middlewares/isLoggedIn.js';
 
 router.post('/register', register);
@@ -15,6 +20,7 @@ router.put('/follow/:id', isLoggedIn, followUser);
 router.put('/unfollow/:id', isLoggedIn, unfollowUser);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
-
+router.put('/sent-account-verification-mail', isLoggedIn, userAccountVerification);
+router.put('/verify-account/:token', isLoggedIn, verifyAccount)
 
 export default router;

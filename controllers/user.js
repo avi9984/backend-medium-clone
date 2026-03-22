@@ -3,11 +3,12 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/generateToken.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import crypto from 'crypto';
+import { accountVerificationEmail } from '../utils/accountVerificationEmail.js';
 
 
 //? Register User function
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
     try {
         const { username, password, email } = req.body;
         if (!(username && password && email)) {
@@ -36,7 +37,7 @@ const register = async (req, res) => {
 
 //? Login User function 
 
-const loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!(email && password)) {
@@ -72,7 +73,7 @@ const loginUser = async (req, res) => {
 
 //! Get login User profile function
 
-const getUserProfile = async (req, res) => {
+export const getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.userAuth.id).select("-password");
 
@@ -90,7 +91,7 @@ const getUserProfile = async (req, res) => {
 }
 
 
-const blockUser = async (req, res) => {
+export const blockUser = async (req, res) => {
     try {
         const userId = req.params.id;
         const userToBlock = await User.findById(userId);
@@ -123,7 +124,7 @@ const blockUser = async (req, res) => {
     }
 }
 
-const unblockUser = async (req, res) => {
+export const unblockUser = async (req, res) => {
     try {
         const userId = req.params.id;
         const userToUnblock = await User.findById(userId);
@@ -159,7 +160,7 @@ const unblockUser = async (req, res) => {
 
 //? View another user profile
 
-const viewOtherUserProfile = async (req, res) => {
+export const viewOtherUserProfile = async (req, res) => {
     try {
         const userProfileId = req.params.id;
         const userProfile = await User.findById(userProfileId);
@@ -188,7 +189,7 @@ const viewOtherUserProfile = async (req, res) => {
 
 //? Follow user function
 
-const followUser = async (req, res) => {
+export const followUser = async (req, res) => {
     try {
         const userToFollowId = req.params.id;
         const userToFollow = await User.findById(userToFollowId).select("-password");
@@ -242,7 +243,7 @@ const followUser = async (req, res) => {
 
 //? Unfollow user function
 
-const unfollowUser = async (req, res) => {
+export const unfollowUser = async (req, res) => {
     try {
         const userToUnfollowId = req.params.id;
         const userToUnfollow = await User.findById(userToUnfollowId).select("-password");
@@ -297,7 +298,7 @@ const unfollowUser = async (req, res) => {
 
 //? Forgot password function
 
-const forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ email });
@@ -323,7 +324,7 @@ const forgotPassword = async (req, res) => {
 
 //? Reset password function
 
-const resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
     try {
         const resetToken = req.params.token;
         const { password } = req.body;
@@ -350,4 +351,56 @@ const resetPassword = async (req, res) => {
     }
 }
 
-export { register, loginUser, getUserProfile, blockUser, unblockUser, viewOtherUserProfile, followUser, unfollowUser, forgotPassword, resetPassword }
+
+//? Account Send Verification mail
+
+export const userAccountVerification = async (req, res) => {
+    try {
+        const userId = req.userAuth._id
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ status: false, message: "User not found" })
+        }
+
+        const verifyToken = await currentUser.generateVerificationToken();
+
+        await currentUser.save();
+
+        await accountVerificationEmail(currentUser.email, verifyToken, currentUser.username)
+
+        return res.status(200).json({
+            status: true,
+            message: `Account verification has been send to your register email id : ${currentUser.email}`
+        })
+
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+//? Account Verification token
+export const verifyAccount = async (req, res) => {
+    try {
+        const verifyToken = req.params.token
+
+        const hashedToken = crypto.createHash("sha256").update(verifyToken).digest("hex");
+
+        const user = await User.findOne({ accountVerificationToken: hashedToken, accountVerificationExpires: { $gt: Date.now() } })
+        if (!user) {
+            return res.status(404).json({ status: false, message: "User not found or invalid token" })
+        }
+        user.isVerified = true
+        user.accountVerificationToken = undefined;
+        user.accountVerificationExpires = undefined;
+        user.save();
+
+        return res.status(200).json({
+            status: true,
+            message: "User verified successfully"
+        })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: error.message });
+    }
+}

@@ -4,8 +4,9 @@ const router = express.Router();
 
 import { createPost, getAllPost, getPostById, updatePost, deletePost } from "../controllers/post.js";
 import { isLoggedIn } from "../middlewares/isLoggedIn.js";
+import isVerifiedAccount from "../middlewares/isVerifiedAccount.js";
 
-router.post("/create", isLoggedIn, createPost);
+router.post("/create", isLoggedIn, isVerifiedAccount, createPost);
 router.get('/all', getAllPost);
 router.get('/:id', getPostById);
 router.put('/:id', isLoggedIn, updatePost);

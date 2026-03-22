@@ -9,7 +9,7 @@ import categoryRouter from './routes/category.js';
 import postRouter from './routes/post.js';
 import commentRouter from './routes/comment.js';
 
-dotenv.config({ path: [".env.local", ".env"] });
+dotenv.config({ path: [".env.local", ".env"], debug: false },);
 const PORT = process.env.PORT || 3000;
 
 

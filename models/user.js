@@ -41,5 +41,13 @@ userSchema.methods.resetPasswordToken = function () {
     return resetToken;
 }
 
+userSchema.methods.generateVerificationToken = function () {
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    this.accountVerificationToken = crypto.createHash("sha256").update(verificationToken).digest("hex");
+
+    this.accountVerificationExpires = Date.now() + 60 * 60 * 1000
+    return verificationToken;
+}
+
 const User = mongoose.model("User", userSchema);
 export default User;
