@@ -5,7 +5,7 @@ import Category from '../models/category.js';
 
 
 //? Create Post
-const createPost = async (req, res) => {
+export const createPost = async (req, res) => {
     try {
         const { title, content, categoryId } = req.body;
         if (!(title && content && categoryId)) {
@@ -40,9 +40,7 @@ const createPost = async (req, res) => {
         return res.status(201).json({
             status: true,
             message: "Post created successfully",
-            post,
-            user,
-            cate
+            post
         })
 
     } catch (error) {
@@ -52,7 +50,7 @@ const createPost = async (req, res) => {
 }
 
 //? Get all post
-const getAllPost = async (req, res) => {
+export const getAllPost = async (req, res) => {
     try {
         const allPost = await Post.find({});
         return res.status(200).json({
@@ -67,7 +65,8 @@ const getAllPost = async (req, res) => {
     }
 }
 
-const getPostById = async (req, res) => {
+//? Get post by Id
+export const getPostById = async (req, res) => {
     try {
         const postId = req.params.id;
         const post = await Post.findById(postId);
@@ -85,7 +84,8 @@ const getPostById = async (req, res) => {
     }
 }
 
-const deletePost = async (req, res) => {
+//? Delete post
+export const deletePost = async (req, res) => {
     try {
         const postId = req.params.id
         await Post.findByIdAndDelete(postId);
@@ -99,7 +99,8 @@ const deletePost = async (req, res) => {
     }
 }
 
-const updatePost = async (req, res) => {
+//? Update post by id
+export const updatePost = async (req, res) => {
     try {
         const postId = req.params.id;
         const { title, content, categoryId } = req.body;
@@ -119,4 +120,100 @@ const updatePost = async (req, res) => {
     }
 }
 
-export { createPost, getAllPost, getPostById, deletePost, updatePost }
+//? User Likes a post
+
+export const likePost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const currentUserId = req.userAuth._id;
+
+        const post = await Post.findById(postId)
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" })
+        }
+
+        // Add the current userId to likes array
+        await Post.findByIdAndUpdate(
+            postId,
+            { $addToSet: { likes: currentUserId } },
+            { returnDocument: true }
+        )
+        // Remove the current UserId from dislikes array
+        post.dislikes = post.dislikes.filter(
+            (userId) => userId.toString() !== currentUserId.toString()
+        );
+
+        await post.save();
+        return res.status(200).json({
+            status: true,
+            message: "User likes your post",
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message })
+    }
+}
+
+//? User dislikes a post
+
+export const dislikePost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const currentUserId = req.userAuth._id;
+
+        const post = await Post.findById(postId)
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" })
+        }
+
+        // Add the current userId to likes array
+        await Post.findByIdAndUpdate(
+            postId,
+            { $addToSet: { dislikes: currentUserId } },
+            { returnDocument: true }
+        )
+        // Remove the current UserId from likes array
+        post.likes = post.likes.filter(
+            (userId) => userId.toString() !== currentUserId.toString()
+        );
+
+        await post.save();
+        return res.status(200).json({
+            status: true,
+            message: "User dislikes your post",
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message })
+    }
+}
+
+//? User Clap into post
+
+export const clapPost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+
+        const post = await Post.findById(postId)
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" })
+        }
+
+        //increment claps
+        const updatePost = await Post.findByIdAndUpdate(postId,
+            {
+                $inc: { claps: 1 }
+            },
+            { returnDocument: 'after' }
+        )
+        return res.status(200).json({
+            status: true,
+            message: `User claps on your ${post.title}`,
+            updatePost
+        })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: "Internal server error" + error.message })
+    }
+}
