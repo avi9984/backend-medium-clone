@@ -52,16 +52,31 @@ export const createPost = async (req, res) => {
 //? Get all post
 export const getAllPost = async (req, res) => {
     try {
-        const allPost = await Post.find({});
+        const currentUserId = req.userAuth._id;
+        // console.log(currentUserId, "current");
+
+        // Get all users who have blocked the current user and extract their IDs
+        const usersBlokingCurrentUser = await User.find({ blockedUsers: currentUserId });
+        const blokingUsersId = usersBlokingCurrentUser.map((userObj) => userObj._id);
+
+        // Fetch posts where author is not in blocked users list
+        const allPosts = await Post.find({
+            author: { $nin: blokingUsersId },
+            $or: [
+                { scheduledPublished: { $lte: Date.now() } },
+                { scheduledPublished: null }
+            ],
+        }).populate("author", "email username role")
+
         return res.status(200).json({
             status: true,
             message: "All post successfully",
-            data: allPost
-        })
+            data: allPosts
+        });
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: "Internal Server Error" })
+        return res.status(500).json({ message: error.message });
     }
 }
 
@@ -215,5 +230,47 @@ export const clapPost = async (req, res) => {
     } catch (error) {
         console.log(error)
         return res.status(500).json({ message: "Internal server error" + error.message })
+    }
+}
+
+
+//? User shudule the post
+
+export const shedulePost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const { scheduledPublished } = req.body;
+
+        if (!(postId && scheduledPublished)) {
+            return res.status(400).json({ status: false, message: "Post id and schedulePublieshed required" })
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ status: false, message: "Post not found" })
+        }
+        const currentUserId = req.userAuth._id
+        //Check only own post is shedules
+        if (post.author.toString() !== currentUserId.toString()) {
+            return res.status(400).json({ status: false, message: "You are not sheduled other post" })
+        }
+
+        const sheduledDate = new Date(scheduledPublished);
+        const currentDate = new Date();
+        if (sheduledDate < currentDate) {
+            return res.status(400).json({ status: false, message: "Shedule date can not be pass as pervious date" })
+        }
+
+        post.scheduledPublished = sheduledDate;
+
+        await post.save();
+        return res.status(200).json({
+            status: true,
+            message: "Your post shedule"
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }

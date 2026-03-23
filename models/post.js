@@ -15,7 +15,11 @@ const postSchema = new mongoose.Schema({
     likes: [{ type: ObjectId, ref: 'User' }],
     dislikes: [{ type: ObjectId, ref: 'User' }],
     comments: [{ type: ObjectId, ref: 'Comment' }]
-}, { timestamps: true, versionKey: false });
+}, {
+    timestamps: true, versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
 
 const Post = mongoose.model("Post", postSchema);
 export default Post;
