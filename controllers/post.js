@@ -151,7 +151,7 @@ export const likePost = async (req, res) => {
         await Post.findByIdAndUpdate(
             postId,
             { $addToSet: { likes: currentUserId } },
-            { returnDocument: true }
+            { returnDocument: 'after' }
         )
         // Remove the current UserId from dislikes array
         post.dislikes = post.dislikes.filter(
@@ -185,7 +185,7 @@ export const dislikePost = async (req, res) => {
         await Post.findByIdAndUpdate(
             postId,
             { $addToSet: { dislikes: currentUserId } },
-            { returnDocument: true }
+            { returnDocument: 'after' }
         )
         // Remove the current UserId from likes array
         post.likes = post.likes.filter(

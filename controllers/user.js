@@ -75,15 +75,19 @@ export const loginUser = async (req, res) => {
 
 export const getUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.userAuth.id).select("-password");
-
-        delete user.password
+        const user = await User.findById(req.userAuth.id)
+            .select("-password")
+            .populate({ path: "profileViewers", model: "User", select: "username email" })
+            .populate({ path: "followers", model: "User", select: "username email" })
+            .populate({ path: "following", model: "User", select: "username email" })
+            .populate({ path: "blockedUsers", model: "User", select: "username email" })
+            .populate({ path: "posts", select: "title content image createdAt claps" }); // Now posts is available
 
         return res.status(200).json({
             status: true,
             message: "Get User profile",
             user
-        })
+        });
     } catch (error) {
         console.log(error);
 

@@ -30,7 +30,11 @@ const userSchema = new mongoose.Schema({
     passwordResetExpires: { type: Date },
     accountVerificationToken: { type: String },
     accountVerificationExpires: { type: Date }
-}, { timestamps: true, versionKey: false });
+}, {
+    timestamps: true, versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true } // for pupulating the responce
+});
 
 
 userSchema.methods.resetPasswordToken = function () {

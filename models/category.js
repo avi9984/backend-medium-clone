@@ -7,7 +7,11 @@ const categorySchema = new mongoose.Schema({
     author: { type: ObjectId, ref: 'User', required: true },
     shares: { type: Number, defalut: 0 },
     post: [{ type: ObjectId, ref: 'Post' }]
-}, { timestamps: true, versionKey: false })
+}, {
+    timestamps: true, versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+})
 
 
 const Category = mongoose.model('Category', categorySchema);
