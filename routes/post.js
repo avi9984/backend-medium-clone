@@ -1,6 +1,9 @@
 import express from "express";
 
 const router = express.Router();
+import multer from "multer";
+import storage from "../utils/fileUploadingService.js";
+const upload = multer({ storage })
 
 import {
     createPost, getAllPost, getPostById, updatePost, deletePost, likePost,
@@ -9,7 +12,7 @@ import {
 import { isLoggedIn } from "../middlewares/isLoggedIn.js";
 import isVerifiedAccount from "../middlewares/isVerifiedAccount.js";
 
-router.post("/create", isLoggedIn, isVerifiedAccount, createPost);
+router.post("/create", isLoggedIn, isVerifiedAccount, upload.single("file"), createPost);
 router.get('/all', isLoggedIn, getAllPost);
 router.get('/:id', getPostById);
 router.put('/:id', isLoggedIn, updatePost);

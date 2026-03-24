@@ -1,7 +1,8 @@
 import Post from '../models/post.js';
 import User from '../models/user.js';
 import Category from '../models/category.js';
-
+import multer from "multer";
+import storage from '../utils/fileUploadingService.js';
 
 
 //? Create Post
@@ -21,20 +22,21 @@ export const createPost = async (req, res) => {
         const postObje = {
             title,
             content,
+            image: req.file.path,
             category: categoryId,
             author: req?.userAuth?._id
         }
         const post = await Post.create(postObje);
 
         //Update User by adding the post
-        const user = await User.findByIdAndUpdate(req?.userAuth?._id, {
+        await User.findByIdAndUpdate(req?.userAuth?._id, {
             $push: { posts: post._id }
-        }, { new: true })
+        }, { returnDocument: 'after' })
 
         //Update category by adding in it
-        const cate = await Category.findByIdAndUpdate(categoryId, {
+        await Category.findByIdAndUpdate(categoryId, {
             $push: { post: post._id }
-        }, { new: true })
+        }, { returnDocument: 'after' })
 
         //send responce
         return res.status(201).json({

@@ -4,7 +4,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 
 const postSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    image: { type: String, default: "" },
+    image: { type: String, required: true },
     claps: { type: Number, default: 0 },
     content: { type: String, required: true },
     author: { type: ObjectId, ref: "User", required: true },
