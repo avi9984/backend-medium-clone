@@ -16,12 +16,12 @@ A full-featured blogging platform REST API inspired by Medium, built with **Node
 
 ---
 
-## 🛡️ Security — Kya Use Kiya Hai?
+## 🛡️ Security
 
 ### 1. 🔑 Password Hashing — `bcryptjs`
-- User passwords **kabhi bhi plain text mein store nahi hote**.
-- Registration pe `bcrypt.hash(password, 10)` se hash banaya jata hai.
-- Login pe `bcrypt.compare()` se verify kiya jata hai.
+- User passwords **password never store in plain text**.
+- On Registration `bcrypt.hash(password, 10)` create hash.
+- On Login `bcrypt.compare()` verifies the hash.
 - **Salt rounds = 10** (industry standard).
 
 ```js
@@ -35,24 +35,24 @@ const checkPass = await bcrypt.compare(password, user.password);
 ---
 
 ### 2. 🎫 JWT Authentication — `jsonwebtoken`
-- Login ke baad server ek **JSON Web Token (JWT)** generate karta hai.
-- Token **24 ghante** ke liye valid hota hai.
-- Har protected route ke aage `isLoggedIn` middleware JWT verify karta hai — `Authorization: Bearer <token>` header se.
+- After login **JSON Web Token (JWT)** generate.
+- Token **24 hours** valid.
+- Every protected route uses the `isLoggedIn` middleware to verify JWT.
 
 ```js
-// Token generate karna
+// Token generate
 const token = jwt.sign({ user: { id: user._id } }, process.env.SECRET_KEY, { expiresIn: 86400 });
 
-// Token verify karna (middleware)
+// Token verify
 jwt.verify(headers, process.env.SECRET_KEY, async (err, decoded) => { ... });
 ```
 
 ---
 
 ### 3. 🔒 Password Reset — Crypto (Node.js built-in)
-- Reset token **`crypto.randomBytes(32)`** se generate hota hai.
-- Woh token **SHA-256 hash** karke DB mein save hota hai (raw token kabhi store nahi).
-- Token **1 ghante** mein expire ho jata hai.
+- Reset token generated using **`crypto.randomBytes(32)`**.
+- Token **SHA-256 hash** before saving to the database.
+- Token expires in **1 hour**.
 
 ```js
 const resetToken = crypto.randomBytes(32).toString("hex");
@@ -63,15 +63,15 @@ this.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
 ---
 
 ### 4. ✅ Account Verification — Crypto Token
-- Usi pattern se email verification token banta hai.
-- `accountVerificationToken` (hashed) + `accountVerificationExpires` DB mein save hota hai.
-- Verified account check karne ke liye `isVerifiedAccount` middleware use hota hai.
+- Uses the same pattern to generate an email verification token.
+- `accountVerificationToken` (hashed) and `accountVerificationExpires` are saved in the database.
+- The `isVerifiedAccount` middleware checks if the account is verified.
 
 ---
 
 ### 5. 🌐 Environment Variables — `dotenv`
-- Sare sensitive credentials `.env` file mein hain — code mein hardcode nahi.
-- `.gitignore` mein `.env` add kiya hua hai.
+- All sensitive credentials are stored in a `.env` file.
+- `.gitignore` includes `.env` to prevent it from being committed.
 
 ```
 SECRET_KEY=...
@@ -83,30 +83,30 @@ CLOUDINARY_API_SECRET=...
 ---
 
 ### 6. 🛡️ Role-Based Access Control (RBAC)
-- User model mein `role` field hai: `"user"` ya `"admin"`.
-- `isLoggedIn` middleware har protected route par lagaya gaya hai.
-- `isVerifiedAccount` middleware ensure karta hai ki sirf verified users hi kuch actions le sakein.
+- The User model has a `role` field: `"user"` or `"admin"`.
+- The `isLoggedIn` middleware protects all protected routes.
+- The `isVerifiedAccount` middleware ensures only verified users can access certain features.
 
 ---
 
 ### 7. 🚫 User Blocking System
-- Ek user dusre ko block kar sakta hai.
-- Block hone ke baad:
-  - Blocked user ka post feed mein **nahi aata**.
-  - Blocked user **profile nahi dekh sakta**.
-  - Blocked user **follow nahi kar sakta**.
+- One user can block other users like instagram or facebook.
+- When a user is blocked:
+  - Posts from the blocked user do **not appear** in the feed.
+  - The blocked user's **profile is not visible**.
+  - The blocked user **cannot be followed**.
 
 ---
 
 ### 8. 🔐 CORS — `cors`
-- Cross-Origin Resource Sharing configured hai taaki frontend requests accept ho sakein.
+- Cross-Origin Resource Sharing configured for frontend requests.
 
 ---
 
 ## 🗄️ MongoDB — Database Setup
 
-### MongoDB Kya Hai?
-MongoDB ek **NoSQL document database** hai jisme data JSON-like documents (BSON) mein store hota hai. Yeh flexible schema ke liye best hai — jaise blog posts jinke alag-alag fields ho sakte hain.
+### What is MongoDB?
+MongoDB is a **NoSQL document database** that stores data in JSON-like documents (BSON). It is ideal for flexible schemas — such as blog posts that may have different fields.
 
 ### Collections (Models)
 
@@ -142,15 +142,15 @@ scheduledPublished, shares, postViews
 
 ### Prerequisites
 - **Node.js** v18+ → [Download](https://nodejs.org)
-- **MongoDB** (local ya Atlas Cloud)
-- **Cloudinary** account (image upload ke liye)
-- **Resend** account (email bhejne ke liye)
+- **MongoDB** (local or Atlas Cloud)
+- **Cloudinary** account (image upload)
+- **Resend** account (email)
 
 ---
 
 ### Step 1: Repository Clone Karo
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/avi9984/backend-medium-clone.git
 cd backend
 ```
 
@@ -160,8 +160,6 @@ cd backend
 ```bash
 npm install
 ```
-
-Yeh packages install hongi:
 
 | Package | Purpose |
 |---|---|
@@ -180,7 +178,7 @@ Yeh packages install hongi:
 
 ---
 
-### Step 3: Environment Variables Setup Karo
+### Step 3: Environment Variables Setup
 Project root mein `.env` file create karo (`.env.example` se copy karo):
 
 ```env
@@ -210,8 +208,8 @@ CLOUDINARY_API_SECRET=your_api_secret
 ### Step 4: MongoDB Setup
 
 #### Option A — Local MongoDB
-1. MongoDB install karo: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
-2. MongoDB service start karo:
+1. Install MongoDB from [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+2. Start MongoDB service:
    ```bash
    # Windows
    net start MongoDB
@@ -219,38 +217,38 @@ CLOUDINARY_API_SECRET=your_api_secret
    # Mac/Linux
    sudo systemctl start mongod
    ```
-3. `.env` mein set karo:
+3. Set the connection string in `MONGO_URL` in `.env`:
    ```
-   MONGO_URL=mongodb://localhost:27017/bloggy-tech
+   MONGO_URL=mongodb://localhost:27017/medium-clone
    ```
 
 #### Option B — MongoDB Atlas (Cloud, Free Tier)
-1. [https://cloud.mongodb.com](https://cloud.mongodb.com) par account banao
-2. Free cluster create karo
-3. **Connect > Drivers** se connection string copy karo
-4. `.env` mein paste karo:
+1. Create a free account on [https://cloud.mongodb.com](https://cloud.mongodb.com)
+2. Create a free cluster 
+3. Copy connection string from **Connect > Drivers**
+4. Paste in `.env`:
    ```
-   MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/bloggy-tech?retryWrites=true&w=majority
+   MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/<example>?retryWrites=true&w=majority
    ```
 
 ---
 
 ### Step 5: Cloudinary Setup (Image Upload)
-1. [https://cloudinary.com](https://cloudinary.com) par free account banao
-2. Dashboard se `Cloud Name`, `API Key`, `API Secret` copy karo
-3. `.env` mein paste karo
+1. Create a free account on [https://cloudinary.com](https://cloudinary.com)
+2. Copy `Cloud Name`, `API Key`, `API Secret` from dashboard
+3. Paste in `.env`
 
 ---
 
 ### Step 6: Resend Setup (Email Service)
-1. [https://resend.com](https://resend.com) par account banao
-2. API Key generate karo
-3. `.env` mein paste karo
-4. `FROM_EMAIL` set karo (verified domain chahiye production mein)
+1. Create a free account on [https://resend.com](https://resend.com)
+2. Generate API Key
+3. Paste in `.env`
+4. Set `FROM_EMAIL` (verified domain required for production)
 
 ---
 
-### Step 7: Server Start Karo
+### Step 7: Start the Server
 
 #### Development Mode (auto-restart with nodemon)
 ```bash
@@ -262,7 +260,7 @@ npm run dev
 npm start
 ```
 
-Server chal raha hai:
+Server is running:
 ```
 MongoDB is connected
 Server is listend on port http://localhost:3000
@@ -276,44 +274,44 @@ Server is listend on port http://localhost:3000
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| POST | `/register` | ❌ | User register karo |
-| POST | `/login` | ❌ | User login karo, JWT milega |
-| GET | `/profile` | ✅ JWT | Apna profile dekho |
-| GET | `/other-profile/:id` | ✅ JWT | Dusre ka profile dekho |
-| PUT | `/follow/:id` | ✅ JWT | User ko follow karo |
-| PUT | `/unfollow/:id` | ✅ JWT | Unfollow karo |
-| PUT | `/block/:id` | ✅ JWT | User ko block karo |
-| PUT | `/unblock/:id` | ✅ JWT | Unblock karo |
-| POST | `/forgot-password` | ❌ | Reset link email pe bhejo |
-| POST | `/reset-password/:token` | ❌ | Naya password set karo |
-| PUT | `/sent-account-verification-mail` | ✅ JWT | Verification mail bhejo |
-| PUT | `/verify-account/:token` | ✅ JWT | Account verify karo |
+| POST | `/register` | ❌ | User register |
+| POST | `/login` | ❌ | User login, JWT |
+| GET | `/profile` | ✅ JWT | Apna profile |
+| GET | `/other-profile/:id` | ✅ JWT | Other user profile |
+| PUT | `/follow/:id` | ✅ JWT | User ko follow |
+| PUT | `/unfollow/:id` | ✅ JWT | Unfollow |
+| PUT | `/block/:id` | ✅ JWT | User ko block |
+| PUT | `/unblock/:id` | ✅ JWT | Unblock |
+| POST | `/forgot-password` | ❌ | Reset link email |
+| POST | `/reset-password/:token` | ❌ | Naya password set |
+| PUT | `/sent-account-verification-mail` | ✅ JWT | Verification mail |
+| PUT | `/verify-account/:token` | ✅ JWT | Account verify |
 
 ### 📰 Posts — `/api/v1/posts`
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| POST | `/` | ✅ JWT + Verified | Post banao (image upload) |
-| GET | `/` | ✅ JWT | Saare posts dekho (blocked users filter) |
+| POST | `/` | ✅ JWT + Verified | Post create (image upload) |
+| GET | `/` | ✅ JWT | Saare posts (blocked users filter) |
 | GET | `/:id` | ✅ JWT | Post by ID |
-| PUT | `/:id` | ✅ JWT | Post update karo |
-| DELETE | `/:id` | ✅ JWT | Post delete karo |
-| PUT | `/like/:id` | ✅ JWT | Post like karo |
-| PUT | `/dislike/:id` | ✅ JWT | Post dislike karo |
+| PUT | `/:id` | ✅ JWT | Post update |
+| DELETE | `/:id` | ✅ JWT | Post delete |
+| PUT | `/like/:id` | ✅ JWT | Post like |
+| PUT | `/dislike/:id` | ✅ JWT | Post dislike |
 | PUT | `/clap/:id` | ✅ JWT | Clap do |
-| PUT | `/schedule/:id` | ✅ JWT | Post schedule karo |
+| PUT | `/schedule/:id` | ✅ JWT | Post schedule |
 
 ### 🏷️ Categories — `/api/v1/categories`
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/` | Category create karo |
+| POST | `/` | Category create |
 | GET | `/` | Saari categories |
 
 ### 💬 Comments — `/api/v1/comments`
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/` | Comment karo |
-| DELETE | `/:id` | Comment delete karo |
+| POST | `/` | Comment create |
+| DELETE | `/:id` | Comment delete |
 
 ---
 
@@ -370,16 +368,16 @@ POST /forgot-password → crypto token generate → SHA-256 hash DB mein save
     ↓
 Email bhejo (Resend) → Reset link with raw token
     ↓
-POST /reset-password/:token → Token hash karo → DB se match karo → Expire check
+POST /reset-password/:token → Token hash karo → match with DB token → Expire check
     ↓
-Naya password bcrypt hash karo → Save → Token clear karo
+hash new password → Save → clear token
 ```
 
 ---
 
 ## 📌 Notes
 
-- API versioning: `/api/v1/` prefix use kiya gaya hai future-proofing ke liye.
-- Post scheduling feature available hai — future date set karo, post tab dikhega.
-- Blocked users ke posts feed mein filter ho jate hain automatically.
-- Images Cloudinary par upload hote hain, maximum size `500x500` limit ke saath.
+- API versioning: `/api/v1/` prefix is used for future-proofing.
+- Post scheduling feature is available — set future date, post will be visible at that time.
+- Blocked users' posts are automatically filtered out from the feed.
+- Images are uploaded to Cloudinary with a maximum size limit of `500x500`.
