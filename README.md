@@ -190,7 +190,7 @@ MONGO_URL=mongodb://localhost:27017/bloggy-tech
 # OR MongoDB Atlas URL:
 # MONGO_URL=mongodb+srv://<username>:<password>@cluster.mongodb.net/bloggy-tech
 
-# JWT Secret (koi bhi strong random string)
+# JWT Secret (any strong random string)
 SECRET_KEY=your_super_secret_jwt_key_here
 
 # Resend Email Service (https://resend.com)
